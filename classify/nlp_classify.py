@@ -1,5 +1,6 @@
 #%%
 import numpy as np
+from pandas.core.algorithms import mode
 import tensorflow as tf
 from tensorflow import keras
 
@@ -97,7 +98,8 @@ test_data = keras.preprocessing.sequence.pad_sequences(
 
 
 #%%
-# train_data[0].shape
+len(train_data[0]), len(train_data[1])
+
 
 #%% [markdown]
 # ---
@@ -105,8 +107,25 @@ test_data = keras.preprocessing.sequence.pad_sequences(
 #
 # ---
 
+#%% [markdown]
+# ---
+# [vocab size 应该在官网教程的基础上改一下](https://github.com/TannerGilbert/Tutorials/issues/1#issuecomment-480898786)
+#
+#
+# ---
+
 #%%
-vocab_size = 10000  # 词汇数目
+import pandas as pd
+
+df = pd.DataFrame(word_index, index=[1]).T
+df
+
+#%%
+max(df.values)[0]
+
+
+#%%
+vocab_size = max(df.values)[0] + 1  # 词汇数目
 
 model = keras.Sequential()
 model.add(keras.layers.Embedding(vocab_size, 16))
@@ -138,9 +157,13 @@ partial_y_train = train_labels[10000:]
 # 上述代码创建了一个验证集合
 #
 # ---
-
 #%%
 
+# partial_x_train = np.expand_dims(partial_x_train,axis=0)
+# partial_y_train = np.expand_dims(partial_y_train,axis=0)
+
+# x_val = np.expand_dims(x_val,axis=0)
+# y_val = np.expand_dims(y_val,axis=0)
 
 #%%
 history = model.fit(
@@ -151,3 +174,65 @@ history = model.fit(
     validation_data=(x_val, y_val),
     verbose=1,
 )
+
+
+#%% [markdown]
+# ---
+# # 评估模型
+#
+# ---
+
+
+#%% [markdown]
+# ---
+# - verbose = 0 为不在标准输出流输出日志信息
+# - verbose = 1 为输出进度条记录
+# - verbose = 2 为每个epoch输出一行记录
+#
+# ---
+
+
+#%%
+
+results = model.evaluate(test_data, test_labels, verbose=2)
+results
+
+#%% [markdown]
+# ---
+# # 可视化
+#
+# ---
+
+#%%
+history_dict = history.history
+history_dict.keys()
+
+#%%
+import matplotlib.pyplot as plt
+
+epochs = range(1, len(history_dict["accuracy"]) + 1)
+
+plt.plot(epochs, history_dict["loss"], "bo", label="Traing loss")
+plt.plot(epochs, history_dict["val_loss"],"b",label="Validation loss")
+plt.title('Traing and validation loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+plt.show()
+
+
+#%%
+
+plt.clf()
+
+plt.plot(epochs,history_dict['val_accuracy'],'bo',label="val accuracy")
+plt.plot(epochs, history_dict['accuracy'],'b',label="train accuracy")
+plt.title("train and validation accuracy")
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.legend()
+plt.show()
+
+
+
+
