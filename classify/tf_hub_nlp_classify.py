@@ -87,4 +87,64 @@ embedding = "https://hub.tensorflow.google.cn/google/tf2-preview/gnews-swivel-20
 hub_layer = hub.KerasLayer(embedding, input_shape=[], dtype=tf.string, trainable=True)
 hub_layer(train_examples_batch[:3])
 
+#%% [markdown]
+# ---
+# 以上代码，相当于我们跳过了学术界很麻烦的embeddding这个步骤，直接使用了现成的研究成果。
+#
+# ---
+
 #%%
+model = tf.keras.Sequential()
+model.add(hub_layer)
+model.add(tf.keras.layers.Dense(16, activation="relu"))
+model.add(tf.keras.layers.Dense(1))
+
+#%%
+model.summary()
+
+#%% [markdown]
+# ---
+# 模型的架构搭建好了，现在开始定义损失函数和优化方法了。
+#
+# ---
+
+#%%
+model.compile(
+    optimizer="adam",
+    loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
+    metrics=["accuracy"],
+)
+
+
+#%% [markdown]
+# ---
+# 按照官方的说法，binaryCrossEntropy更适合处理概率--它适合度量概率之间的距离。
+#
+# ---
+
+
+#%%
+history = model.fit(
+    train_data.shuffle(10000).batch(512),
+    epochs=20,
+    validation_data=validation_data.batch(512),
+    verbose=1,
+)
+
+#%% [markdown]
+# ---
+# 以上代码我们成功的完成了训练的步骤。tfds支持data.shuffle(num).batch(b)
+#
+# ---
+
+#%%
+
+results = model.evaluate(test_data.batch(512), verbose=2)
+
+for name, value in zip(model.metrics_names, results):
+    print("%s:%.3f" % (name, value))
+
+
+#%%
+
+
